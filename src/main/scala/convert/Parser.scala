@@ -1,6 +1,7 @@
 package rms.bo.pcc.convert
 
 import util.parsing.combinator._
+import scalaz._, Scalaz._
 
 object Parser extends RegexParsers {
 
@@ -10,13 +11,50 @@ object Parser extends RegexParsers {
 
   def eol = opt('\r') ~> '\n'
 
-  def header = """\*{1,3}""".r ~ """[^\r\n]*""".r <~ eol ^^ {
+  def header = ("""\*{1,3}""".r <~ rep(' ')) ~ """[^\r\n]*""".r <~ eol ^^ {
     case "*"   ~ n => Header1(n)
     case "**"  ~ n => Header2(n)
     case "***" ~ n => Header3(n)
   }
 
-  def paragraph = rep1("""[^\r\n]+""".r <~ eol) ^^ {
+  def itemList =
+    itemList3 | orderedItemList3 |
+    itemList2 | orderedItemList2 |
+    itemList1 | orderedItemList1
+
+  def itemList1 = rep1(
+    "-" ~> not('-') ~> rep(' ') ~> """[^\r\n]*""".r <~ eol ^^ ListedItem.apply |
+    itemList2 | orderedItemList2 |
+    itemList3 | orderedItemList3
+  ) ^^ ItemList1.apply
+
+  def orderedItemList1 = rep1(
+    "+" ~> not('+') ~> rep(' ') ~> """[^\r\n]*""".r <~ eol ^^ ListedItem.apply |
+    itemList2 | orderedItemList2 |
+    itemList3 | orderedItemList3
+  ) ^^ OrderedItemList1.apply
+
+  def itemList2 = rep1(
+    "--" ~> not('-') ~> rep(' ') ~> """[^\r\n]*""".r <~ eol ^^ ListedItem.apply |
+    itemList3 | orderedItemList3
+  ) ^^ ItemList2.apply
+
+  def orderedItemList2 = rep1(
+    "++" ~> not('+') ~> rep(' ') ~> """[^\r\n]*""".r <~ eol ^^ ListedItem.apply |
+    itemList3 | orderedItemList3
+  ) ^^ OrderedItemList2.apply
+
+  def itemList3 = rep1("---" ~> not('-') ~> rep(' ') ~> """[^\r\n]*""".r <~ eol) ^^ {
+    _ ∘ ListedItem.apply |> ItemList3.apply
+  }
+
+  def orderedItemList3 = rep1("+++" ~> not('+') ~> rep(' ') ~> """[^\r\n]*""".r <~ eol) ^^ {
+    _ ∘ ListedItem.apply |> OrderedItemList3.apply
+  }
+
+  def paragraphPrefix = not("|" | " " | "*" | "-")
+
+  def paragraph = rep1(paragraphPrefix ~> """[^\r\n]+""".r <~ eol) ^^ {
     case ls => Paragraph(ls)
   }
 
@@ -42,6 +80,7 @@ object Parser extends RegexParsers {
     blockQuote |
     emptyLine |
     header |
+    itemList |
     paragraph
   )
 
