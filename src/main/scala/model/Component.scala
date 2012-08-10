@@ -9,7 +9,7 @@ case class Header3(name: String) extends Header
 
 case class Paragraph(lines: List[String]) extends Component
 
-object EmptyLine extends Component
+case object EmptyLine extends Component
 
 case class BlockQuote(lines: List[String]) extends Component
 
