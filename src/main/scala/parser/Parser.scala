@@ -1,5 +1,6 @@
-package rms.bo.pcc.convert
+package rms.bo.pcc.parser
 
+import rms.bo.pcc.model._
 import util.parsing.combinator._
 import scalaz._, Scalaz._
 

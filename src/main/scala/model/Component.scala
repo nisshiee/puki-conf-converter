@@ -1,4 +1,4 @@
-package rms.bo.pcc.convert
+package rms.bo.pcc.model
 
 sealed trait Component
 

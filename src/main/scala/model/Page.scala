@@ -1,3 +1,3 @@
-package rms.bo.pcc.convert
+package rms.bo.pcc.model
 
 case class Page(components: Seq[Component])
